@@ -1,3 +1,13 @@
+.onAttach <- function(...) {
+ 
+   packageStartupMessage("##\n## instaR: Access to Instagram API via R")
+   packageStartupMessage("## Note: due to recent changes in the Instagram")
+   packageStartupMessage("## API, access to most endpoints now require ")
+   packageStartupMessage("## previous approval from Instagram. See:")
+   packageStartupMessage("## https://www.instagram.com/developer/review/\n##")
+
+}
+
 unlistWithNA <- function(lst, field){
     if (length(field)==1){
         notnulls <- unlist(lapply(lst, function(x) !is.null(x[[field]])))
@@ -126,15 +136,15 @@ callAPI <- function(url, token){
     if (class(token)[1]!="config" & class(token)[1]!="Token2.0"){
         stop("Error in access token. See help for details.")
     }
-    error <- tryCatch(content <- rjson::fromJSON(rawToChar(url.data$content), 
+    error <- tryCatch(content <- jsonlite::fromJSON(rawToChar(url.data$content), 
         unexpected.escape = "skip"), error=function(e) e)
     # retrying 3 times if error
     if (inherits(error, 'error')){
         err <- 0
         while (inherits(error, 'error')){
             Sys.sleep(.5)
-            error <- tryCatch(content <- rjson::fromJSON(rawToChar(url.data$content), 
-                unexpected.escape = "skip"), error=function(e) e)
+            error <- tryCatch(content <- jsonlite::fromJSON(rawToChar(url.data$content), 
+                flatten=TRUE), error=function(e) e)
             err <- err + 1
             if (err==3){ stop("Error!") }
         }

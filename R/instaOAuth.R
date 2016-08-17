@@ -46,7 +46,7 @@
 #' }
 #'
 
-instaOAuth <- function(app_id, app_secret, scope="basic"){
+instaOAuth <- function(app_id, app_secret, scope=c("basic", "public_content")){
 
     ## getting callback URL
     full_url <- httr::oauth_callback()
@@ -67,7 +67,7 @@ instaOAuth <- function(app_id, app_secret, scope="basic"){
     if (packageVersion('httr') <= "0.2"){
         insta_token <- httr::oauth2.0_token(instagram, myapp, scope=scope)
         token <- httr::sign_oauth2.0(insta_token$access_token)
-        if (httr::GET("https://api.instagram.com/v1/users/self/feed?count=1", 
+        if (httr::GET("https://api.instagram.com/v1/users/self/?", 
             config=token)$status==200){
             message("Authentication successful.")
         }
@@ -76,24 +76,33 @@ instaOAuth <- function(app_id, app_secret, scope="basic"){
     ## httr 0.3 to 0.6.1
     if (packageVersion('httr') > "0.2" & packageVersion('httr') <= "0.6.1"){
         token <- httr::oauth2.0_token(instagram, myapp, cache=FALSE, scope=scope)
-        if (httr::GET(paste0("https://api.instagram.com/v1/users/self/feed?count=1", 
+        if (httr::GET(paste0("https://api.instagram.com/v1/users/self/?", 
                 "&access_token=", 
                 token$credentials$access_token))$status==200){
             message("Authentication successful.")
         }   
     }
     
-    ## current httr version
-    if (packageVersion('httr') > "0.6.1"){
+    ## httr version from 0.6 to 1.1
+    if (packageVersion('httr') > "0.6.1" & packageVersion('httr') < "1.2"){
         Sys.setenv("HTTR_SERVER_PORT" = "1410/")
         token <- httr::oauth2.0_token(instagram, myapp, cache=FALSE, scope=scope)
-        if (httr::GET(paste0("https://api.instagram.com/v1/users/self/feed?count=1", 
+        if (httr::GET(paste0("https://api.instagram.com/v1/users/self/?", 
                 "&access_token=", 
                 token$credentials$access_token))$status==200){
             message("Authentication successful.")
         }  
     }
 
+    ## current version of httr
+    if (packageVersion('httr') >= "1.2"){
+        token <- oauth2.0_token(instagram, myapp, cache=FALSE, scope=scope)
+        if (GET(paste0("https://api.instagram.com/v1/users/self/?", 
+                "&access_token=", 
+                token$credentials$access_token))$status==200){
+            message("Authentication successful.")
+        }  
+    }
     return(token)
 }
 
